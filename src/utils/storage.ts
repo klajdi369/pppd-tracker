@@ -1,4 +1,5 @@
 import type { DailyLog } from '../types';
+import { migrateLog } from '../types';
 
 const STORAGE_KEY = 'pppd-tracker-logs';
 
@@ -6,7 +7,8 @@ export function getAllLogs(): DailyLog[] {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return [];
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw) as Record<string, unknown>[];
+    return parsed.map(migrateLog);
   } catch {
     return [];
   }

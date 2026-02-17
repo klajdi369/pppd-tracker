@@ -5,6 +5,7 @@ import { createEmptyLog } from '../types';
 import { getLogByDate, saveLog } from '../utils/storage';
 import { today, formatDisplay } from '../utils/dates';
 import SliderInput from '../components/SliderInput';
+import TimeOfDaySliders from '../components/TimeOfDaySliders';
 import MealEntry from '../components/MealEntry';
 import ExerciseEntry from '../components/ExerciseEntry';
 import MedicationEntry from '../components/MedicationEntry';
@@ -90,10 +91,10 @@ export default function LogPage() {
         {activeSection === 'dizziness' && (
           <section className="form-section">
             <h3>Dizziness</h3>
-            <SliderInput
+            <TimeOfDaySliders
               label="Severity"
-              value={log.dizzinessSeverity}
-              onChange={(v) => update('dizzinessSeverity', v)}
+              rating={log.dizziness}
+              onChange={(v) => update('dizziness', v)}
               lowLabel="None"
               highLabel="Severe"
               colorScale
@@ -198,25 +199,25 @@ export default function LogPage() {
         {activeSection === 'mental' && (
           <section className="form-section">
             <h3>Mental Health</h3>
-            <SliderInput
-              label="Stress Level"
-              value={log.stressLevel}
-              onChange={(v) => update('stressLevel', v)}
+            <TimeOfDaySliders
+              label="Stress"
+              rating={log.stress}
+              onChange={(v) => update('stress', v)}
               lowLabel="Calm"
               highLabel="Very stressed"
               colorScale
             />
-            <SliderInput
-              label="Anxiety Level"
-              value={log.anxietyLevel}
-              onChange={(v) => update('anxietyLevel', v)}
+            <TimeOfDaySliders
+              label="Anxiety"
+              rating={log.anxiety}
+              onChange={(v) => update('anxiety', v)}
               lowLabel="None"
               highLabel="Severe"
               colorScale
             />
-            <SliderInput
+            <TimeOfDaySliders
               label="Mood"
-              value={log.mood}
+              rating={log.mood}
               onChange={(v) => update('mood', v)}
               min={1}
               max={5}
@@ -239,17 +240,17 @@ export default function LogPage() {
         {activeSection === 'energy' && (
           <section className="form-section">
             <h3>Energy & Fatigue</h3>
-            <SliderInput
-              label="Energy Level"
-              value={log.energyLevel}
-              onChange={(v) => update('energyLevel', v)}
+            <TimeOfDaySliders
+              label="Energy"
+              rating={log.energy}
+              onChange={(v) => update('energy', v)}
               lowLabel="Exhausted"
               highLabel="Energized"
             />
-            <SliderInput
-              label="Fatigue Severity"
-              value={log.fatigueSeverity}
-              onChange={(v) => update('fatigueSeverity', v)}
+            <TimeOfDaySliders
+              label="Fatigue"
+              rating={log.fatigue}
+              onChange={(v) => update('fatigue', v)}
               lowLabel="None"
               highLabel="Severe"
               colorScale

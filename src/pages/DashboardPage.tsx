@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllLogs } from '../utils/storage';
-import { today, formatDisplay, getLast7Days, formatShort, formatDayOfWeek } from '../utils/dates';
+import { today, formatDisplay, getLast7Days, formatDayOfWeek } from '../utils/dates';
 import { getLogByDate } from '../utils/storage';
-import type { DailyLog } from '../types';
+import { avgRating } from '../types';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar,
@@ -23,12 +23,11 @@ export default function DashboardPage() {
       return {
         date,
         label: formatDayOfWeek(date),
-        shortDate: formatShort(date),
-        dizziness: log?.dizzinessSeverity ?? null,
-        stress: log?.stressLevel ?? null,
-        energy: log?.energyLevel ?? null,
+        dizziness: log ? avgRating(log.dizziness) : null,
+        stress: log ? avgRating(log.stress) : null,
+        energy: log ? avgRating(log.energy) : null,
         sleep: log?.sleepHours ?? null,
-        fatigue: log?.fatigueSeverity ?? null,
+        fatigue: log ? avgRating(log.fatigue) : null,
       };
     });
   }, [last7Days, allLogs]);
@@ -47,13 +46,25 @@ export default function DashboardPage() {
       .map(([name, count]) => ({ name, count }));
   }, [allLogs]);
 
-  function getTrend(field: keyof DailyLog): 'up' | 'down' | 'flat' {
+  function getAvgTrend(field: 'dizziness' | 'stress' | 'energy' | 'fatigue'): 'up' | 'down' | 'flat' {
     if (allLogs.length < 2) return 'flat';
     const recent = allLogs.slice(0, 3);
     const older = allLogs.slice(3, 6);
     if (older.length === 0) return 'flat';
-    const recentAvg = recent.reduce((s, l) => s + (l[field] as number), 0) / recent.length;
-    const olderAvg = older.reduce((s, l) => s + (l[field] as number), 0) / older.length;
+    const recentAvg = recent.reduce((s, l) => s + avgRating(l[field]), 0) / recent.length;
+    const olderAvg = older.reduce((s, l) => s + avgRating(l[field]), 0) / older.length;
+    const diff = recentAvg - olderAvg;
+    if (Math.abs(diff) < 0.5) return 'flat';
+    return diff > 0 ? 'up' : 'down';
+  }
+
+  function getSleepTrend(): 'up' | 'down' | 'flat' {
+    if (allLogs.length < 2) return 'flat';
+    const recent = allLogs.slice(0, 3);
+    const older = allLogs.slice(3, 6);
+    if (older.length === 0) return 'flat';
+    const recentAvg = recent.reduce((s, l) => s + l.sleepHours, 0) / recent.length;
+    const olderAvg = older.reduce((s, l) => s + l.sleepHours, 0) / older.length;
     const diff = recentAvg - olderAvg;
     if (Math.abs(diff) < 0.5) return 'flat';
     return diff > 0 ? 'up' : 'down';
@@ -65,6 +76,10 @@ export default function DashboardPage() {
     if (trend === 'up') return <TrendingUp size={16} className={isGood ? 'trend-good' : 'trend-bad'} />;
     return <TrendingDown size={16} className={isGood ? 'trend-good' : 'trend-bad'} />;
   }
+
+  const todayDizzAvg = todayLog ? avgRating(todayLog.dizziness) : 0;
+  const todayStressAvg = todayLog ? avgRating(todayLog.stress) : 0;
+  const todayEnergyAvg = todayLog ? avgRating(todayLog.energy) : 0;
 
   return (
     <div className="page dashboard-page">
@@ -84,9 +99,9 @@ export default function DashboardPage() {
           <h3>Today's Summary</h3>
           <div className="summary-grid">
             <div className="summary-card">
-              <span className="summary-label">Dizziness</span>
-              <span className="summary-value" data-severity={todayLog.dizzinessSeverity > 6 ? 'high' : todayLog.dizzinessSeverity > 3 ? 'medium' : 'low'}>
-                {todayLog.dizzinessSeverity}/10
+              <span className="summary-label">Dizziness (avg)</span>
+              <span className="summary-value" data-severity={todayDizzAvg > 6 ? 'high' : todayDizzAvg > 3 ? 'medium' : 'low'}>
+                {todayDizzAvg}/10
               </span>
             </div>
             <div className="summary-card">
@@ -94,14 +109,14 @@ export default function DashboardPage() {
               <span className="summary-value">{todayLog.sleepHours}h</span>
             </div>
             <div className="summary-card">
-              <span className="summary-label">Stress</span>
-              <span className="summary-value" data-severity={todayLog.stressLevel > 6 ? 'high' : todayLog.stressLevel > 3 ? 'medium' : 'low'}>
-                {todayLog.stressLevel}/10
+              <span className="summary-label">Stress (avg)</span>
+              <span className="summary-value" data-severity={todayStressAvg > 6 ? 'high' : todayStressAvg > 3 ? 'medium' : 'low'}>
+                {todayStressAvg}/10
               </span>
             </div>
             <div className="summary-card">
-              <span className="summary-label">Energy</span>
-              <span className="summary-value">{todayLog.energyLevel}/10</span>
+              <span className="summary-label">Energy (avg)</span>
+              <span className="summary-value">{todayEnergyAvg}/10</span>
             </div>
             <div className="summary-card">
               <span className="summary-label">Water</span>
@@ -124,19 +139,19 @@ export default function DashboardPage() {
         <div className="trend-indicators">
           <div className="trend-item">
             <span>Dizziness</span>
-            <TrendIcon trend={getTrend('dizzinessSeverity')} />
+            <TrendIcon trend={getAvgTrend('dizziness')} />
           </div>
           <div className="trend-item">
             <span>Stress</span>
-            <TrendIcon trend={getTrend('stressLevel')} />
+            <TrendIcon trend={getAvgTrend('stress')} />
           </div>
           <div className="trend-item">
             <span>Energy</span>
-            <TrendIcon trend={getTrend('energyLevel')} invertColor />
+            <TrendIcon trend={getAvgTrend('energy')} invertColor />
           </div>
           <div className="trend-item">
             <span>Sleep</span>
-            <TrendIcon trend={getTrend('sleepHours')} invertColor />
+            <TrendIcon trend={getSleepTrend()} invertColor />
           </div>
         </div>
       </div>
@@ -163,7 +178,7 @@ export default function DashboardPage() {
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 connectNulls
-                name="Dizziness"
+                name="Dizziness (avg)"
               />
               <Line
                 type="monotone"
@@ -172,7 +187,7 @@ export default function DashboardPage() {
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 connectNulls
-                name="Stress"
+                name="Stress (avg)"
               />
             </LineChart>
           </ResponsiveContainer>
@@ -210,7 +225,7 @@ export default function DashboardPage() {
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 connectNulls
-                name="Energy"
+                name="Energy (avg)"
               />
             </LineChart>
           </ResponsiveContainer>

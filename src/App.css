@@ -296,6 +296,69 @@
   background: var(--color-good) !important;
 }
 
+/* Time of Day Sliders */
+.tod-sliders {
+  margin-bottom: 1.25rem;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius);
+  padding: 0.875rem;
+}
+
+.tod-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.75rem;
+}
+
+.tod-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.tod-range-hint {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+}
+
+.tod-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.tod-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tod-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.tod-icon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.tod-period-label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  flex: 1;
+}
+
+.tod-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  min-width: 1.5rem;
+  text-align: right;
+}
+
 /* Slider */
 .slider-input {
   margin-bottom: 1rem;

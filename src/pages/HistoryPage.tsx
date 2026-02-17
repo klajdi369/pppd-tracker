@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllLogs } from '../utils/storage';
 import { formatDisplay } from '../utils/dates';
+import { avgRating } from '../types';
 import { ChevronRight, Frown, Meh, Smile } from 'lucide-react';
 
 export default function HistoryPage() {
@@ -10,20 +11,20 @@ export default function HistoryPage() {
   const [filter, setFilter] = useState<'all' | 'high' | 'low'>('all');
 
   const filtered = useMemo(() => {
-    if (filter === 'high') return allLogs.filter((l) => l.dizzinessSeverity >= 6);
-    if (filter === 'low') return allLogs.filter((l) => l.dizzinessSeverity <= 3);
+    if (filter === 'high') return allLogs.filter((l) => avgRating(l.dizziness) >= 6);
+    if (filter === 'low') return allLogs.filter((l) => avgRating(l.dizziness) <= 3);
     return allLogs;
   }, [allLogs, filter]);
 
-  function getSeverityIcon(severity: number) {
-    if (severity <= 3) return <Smile size={20} className="icon-good" />;
-    if (severity <= 6) return <Meh size={20} className="icon-moderate" />;
+  function getSeverityIcon(avg: number) {
+    if (avg <= 3) return <Smile size={20} className="icon-good" />;
+    if (avg <= 6) return <Meh size={20} className="icon-moderate" />;
     return <Frown size={20} className="icon-bad" />;
   }
 
-  function getSeverityClass(severity: number) {
-    if (severity <= 3) return 'severity-low';
-    if (severity <= 6) return 'severity-medium';
+  function getSeverityClass(avg: number) {
+    if (avg <= 3) return 'severity-low';
+    if (avg <= 6) return 'severity-medium';
     return 'severity-high';
   }
 
@@ -53,32 +54,36 @@ export default function HistoryPage() {
       </div>
 
       <div className="history-list">
-        {filtered.map((log) => (
-          <div
-            key={log.id}
-            className={`history-card ${getSeverityClass(log.dizzinessSeverity)}`}
-            onClick={() => navigate(`/log?date=${log.date}`)}
-          >
-            <div className="history-card-left">
-              {getSeverityIcon(log.dizzinessSeverity)}
-              <div className="history-card-info">
-                <span className="history-date">{formatDisplay(log.date)}</span>
-                <span className="history-details">
-                  Dizziness: {log.dizzinessSeverity}/10
-                  {' · '}Sleep: {log.sleepHours}h
-                  {' · '}Stress: {log.stressLevel}/10
-                </span>
-                {log.triggers.length > 0 && (
-                  <span className="history-triggers">
-                    {log.triggers.slice(0, 3).join(', ')}
-                    {log.triggers.length > 3 && ` +${log.triggers.length - 3}`}
+        {filtered.map((log) => {
+          const dizzAvg = avgRating(log.dizziness);
+          const stressAvg = avgRating(log.stress);
+          return (
+            <div
+              key={log.id}
+              className={`history-card ${getSeverityClass(dizzAvg)}`}
+              onClick={() => navigate(`/log?date=${log.date}`)}
+            >
+              <div className="history-card-left">
+                {getSeverityIcon(dizzAvg)}
+                <div className="history-card-info">
+                  <span className="history-date">{formatDisplay(log.date)}</span>
+                  <span className="history-details">
+                    Dizziness: {dizzAvg}/10
+                    {' · '}Sleep: {log.sleepHours}h
+                    {' · '}Stress: {stressAvg}/10
                   </span>
-                )}
+                  {log.triggers.length > 0 && (
+                    <span className="history-triggers">
+                      {log.triggers.slice(0, 3).join(', ')}
+                      {log.triggers.length > 3 && ` +${log.triggers.length - 3}`}
+                    </span>
+                  )}
+                </div>
               </div>
+              <ChevronRight size={18} className="history-chevron" />
             </div>
-            <ChevronRight size={18} className="history-chevron" />
-          </div>
-        ))}
+          );
+        })}
 
         {filtered.length === 0 && (
           <div className="empty-state">
